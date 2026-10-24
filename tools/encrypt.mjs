@@ -8,7 +8,7 @@ import vm from 'node:vm';
 
 const pw = process.env.NATGE_PASSWORD;
 if (!pw) { console.error('Set NATGE_PASSWORD'); process.exit(1); }
-const FILES = ['questions', 'news', 'checklist', 'interview'];
+const FILES = ['questions', 'news', 'checklist', 'interview', 'learn'];
 const ITER = 600000;
 
 const sandbox = { window: {} };
@@ -19,10 +19,15 @@ for (const f of FILES) {
   vm.runInContext(readFileSync(p, 'utf8'), sandbox, { filename: p });
 }
 const w = sandbox.window;
-for (const k of ['QUIZ', 'NEWS', 'CHECKLIST', 'INTERVIEW']) if (!w[k]) { console.error(`src did not define window.${k}`); process.exit(1); }
-const plain = new TextEncoder().encode(JSON.stringify({ QUIZ: w.QUIZ, NEWS: w.NEWS, CHECKLIST: w.CHECKLIST, INTERVIEW: w.INTERVIEW }));
+for (const k of ['QUIZ', 'NEWS', 'CHECKLIST', 'INTERVIEW', 'LEARN']) if (!w[k]) { console.error(`src did not define window.${k}`); process.exit(1); }
+const plain = new TextEncoder().encode(JSON.stringify({ QUIZ: w.QUIZ, NEWS: w.NEWS, CHECKLIST: w.CHECKLIST, INTERVIEW: w.INTERVIEW, LEARN: w.LEARN }));
 
-const salt = crypto.getRandomValues(new Uint8Array(16));
+// Reuse the existing salt so the derived key stays the same and devices that chose "remember" stay unlocked
+// after a content update. Pass --new-salt (e.g. when changing the password) to generate a fresh one.
+let salt = crypto.getRandomValues(new Uint8Array(16));
+if (existsSync('data/content.enc') && !process.argv.includes('--new-salt')) {
+  try { salt = new Uint8Array(Buffer.from(JSON.parse(readFileSync('data/content.enc', 'utf8')).salt, 'base64')); } catch (e) { /* keep fresh salt */ }
+}
 const iv = crypto.getRandomValues(new Uint8Array(12));
 const base = await crypto.subtle.importKey('raw', new TextEncoder().encode(pw), 'PBKDF2', false, ['deriveKey']);
 const key = await crypto.subtle.deriveKey({ name: 'PBKDF2', salt, iterations: ITER, hash: 'SHA-256' }, base, { name: 'AES-GCM', length: 256 }, false, ['encrypt']);

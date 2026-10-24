@@ -16,7 +16,7 @@ try {
   data = JSON.parse(new TextDecoder().decode(await crypto.subtle.decrypt({ name: 'AES-GCM', iv: u(env.iv) }, key, u(env.ct))));
 } catch (e) { console.error('Wrong password or damaged file'); process.exit(1); }
 mkdirSync('src', { recursive: true });
-const map = { questions: 'QUIZ', news: 'NEWS', checklist: 'CHECKLIST', interview: 'INTERVIEW' };
+const map = { questions: 'QUIZ', news: 'NEWS', checklist: 'CHECKLIST', interview: 'INTERVIEW', learn: 'LEARN' };
 for (const [f, k] of Object.entries(map)) {
   const p = `src/${f}.js`;
   if (existsSync(p) && !process.argv.includes('--force')) { console.log(`${p} exists, kept (use --force to overwrite)`); continue; }

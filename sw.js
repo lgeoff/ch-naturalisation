@@ -1,6 +1,6 @@
 // Network-first service worker: always tries to fetch the latest questions/news,
 // falls back to the cached copy when offline.
-const CACHE = 'natge-v5';
+const CACHE = 'natge-v7';
 const CORE = ['./', 'index.html', 'styles.css', 'unlock.js', 'app.js', 'data/content.enc',
   'manifest.webmanifest', 'assets/icon.svg', 'assets/icon-180.png', 'assets/icon-192.png'];
 

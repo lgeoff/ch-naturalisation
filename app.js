@@ -3,7 +3,7 @@
 (function () {
   'use strict';
 
-  const QUIZ = window.QUIZ, NEWS = window.NEWS || { questions: [], briefs: [], upcoming: [] }, CHECK = window.CHECKLIST, IV = window.INTERVIEW || { cards: [], categories: [] };
+  const QUIZ = window.QUIZ, NEWS = window.NEWS || { questions: [], briefs: [], upcoming: [] }, CHECK = window.CHECKLIST, IV = window.INTERVIEW || { cards: [], categories: [] }, LEARN = window.LEARN || { cards: [], themes: [], timeline: [] };
   const ALLQ = QUIZ.questions.concat((NEWS.questions || []).map(q => Object.assign({ theme: 'news' }, q)));
   const THEMES = QUIZ.themes;
   const byId = Object.fromEntries(ALLQ.map(q => [q.id, q]));
@@ -15,7 +15,7 @@
     try { s = JSON.parse(localStorage.getItem(KEY)) || {}; } catch (e) { s = {}; }
     s.progress = s.progress || {}; s.checks = s.checks || {}; s.exams = s.exams || [];
     s.settings = Object.assign({ lang: (navigator.language || 'en').startsWith('fr') ? 'fr' : 'en', target: '2027-09', origin: '' }, s.settings || {});
-    s.stamped = s.stamped || {}; s.interview = s.interview || {};
+    s.stamped = s.stamped || {}; s.interview = s.interview || {}; s.learn = s.learn || {};
     return s;
   })();
   function save() { try { localStorage.setItem(KEY, JSON.stringify(store)); } catch (e) { /* private mode */ } }
@@ -23,7 +23,7 @@
   /* ---------- i18n ---------- */
   const UI = {
     en: {
-      appName: 'Naturalisation', tabPassport: 'Themes', tabExam: 'Mock test', tabChecklist: 'Application', tabInfo: 'The test',
+      appName: 'Naturalisation', tabLearn: 'Learn', tabPassport: 'Quiz', tabExam: 'Mock test', tabChecklist: 'Application', tabInfo: 'The test',
       homeTitle: 'Your study passport',
       homeIntro: 'Each theme is a stamp. A theme gets stamped once you have answered every one of its questions correctly at least on your latest try.',
       stampedOf: (a, b) => `<b>${a}</b> of ${b} themes stamped`,
@@ -48,11 +48,12 @@
       upcoming: 'Coming up', studyMaterial: 'Official study material', resetAll: 'Reset all progress on this device', lockDevice: 'Lock this device (forget the password)',
       resetConfirm: 'Erase quiz progress, checklist ticks and settings on this device?', resetDone: 'Progress erased',
       imgCredit: 'Image: Wikipedia', themeNews: 'Current events',
+      learnTitle: 'Learn the essentials', learnIntro: 'Short illustrated lessons that cover every fact in the official question bank. Read a lesson, then test yourself on it.', timelineTitle: '20 dates to know', timelineIntro: 'Tap a date to open its lesson.', cardsRead: (a, b) => `${a}/${b} read`, remember: 'Remember', didYouKnow: 'Did you know?', prevCard: 'Previous', nextCard: 'Next', finishLesson: 'Finish the lesson', lessonDone: 'Lesson complete', lessonDoneText: 'Now check what stuck: the quiz questions linked to this lesson.', testYourself: (n) => `Test yourself (${n} questions)`, nextLesson: 'Next lesson', allLessons: 'All lessons', learnMore: 'Learn more', openLesson: 'Open the lesson', youChose: 'You chose:', cardOf: (a, b) => `${a} / ${b}`, lessonCheck: 'Lesson check',
       ivTheme: 'Interview practice', ivIntro: 'Open questions the officer may ask after you file. Answer out loud, in French, then compare with the key points.', ivHear: 'What you are likely to hear', ivShow: 'Show the key points', ivOk: 'I could answer this', ivAgain: 'Practise again', ivDone: 'Practice round complete', ivScore: (a, b) => `${a} of ${b} answered confidently`, ivTip: 'Tip', ivReady: (a, b) => `${a}/${b} ready`, ivUpdated: (d) => `Office holders and votes checked on ${d}.`, ivStart: 'Start interview practice', offlineNote: 'Works offline once loaded. Add it to your home screen from the browser’s Share menu.',
       verified: (d) => `Answers checked against official sources on ${d}.`
     },
     fr: {
-      appName: 'Naturalisation', tabPassport: 'Thèmes', tabExam: 'Test blanc', tabChecklist: 'Dossier', tabInfo: 'L’examen',
+      appName: 'Naturalisation', tabLearn: 'Apprendre', tabPassport: 'Quiz', tabExam: 'Test blanc', tabChecklist: 'Dossier', tabInfo: 'L’examen',
       homeTitle: 'Votre passeport de révision',
       homeIntro: 'Chaque thème est un timbre. Il est tamponné lorsque vous avez répondu juste à toutes ses questions lors de votre dernier essai.',
       stampedOf: (a, b) => `<b>${a}</b> thème${a > 1 ? 's' : ''} tamponné${a > 1 ? 's' : ''} sur ${b}`,
@@ -77,6 +78,7 @@
       upcoming: 'À venir', studyMaterial: 'Documentation officielle', resetAll: 'Effacer toute la progression sur cet appareil', lockDevice: 'Verrouiller cet appareil (oublier le mot de passe)',
       resetConfirm: 'Effacer la progression, les coches et les réglages sur cet appareil ?', resetDone: 'Progression effacée',
       imgCredit: 'Image : Wikipédia', themeNews: 'Actualité',
+      learnTitle: 'Apprendre l’essentiel', learnIntro: 'De courtes leçons illustrées qui couvrent toutes les notions du questionnaire officiel. Lisez une leçon, puis testez-vous.', timelineTitle: '20 dates à connaître', timelineIntro: 'Touchez une date pour ouvrir sa leçon.', cardsRead: (a, b) => `${a}/${b} lues`, remember: 'À retenir', didYouKnow: 'Le saviez-vous ?', prevCard: 'Précédent', nextCard: 'Suivant', finishLesson: 'Terminer la leçon', lessonDone: 'Leçon terminée', lessonDoneText: 'Vérifiez maintenant ce que vous avez retenu avec les questions liées à cette leçon.', testYourself: (n) => `Testez-vous (${n} questions)`, nextLesson: 'Leçon suivante', allLessons: 'Toutes les leçons', learnMore: 'Pour en savoir plus', openLesson: 'Ouvrir la leçon', youChose: 'Vous avez choisi :', cardOf: (a, b) => `${a} / ${b}`, lessonCheck: 'Contrôle de la leçon',
       ivTheme: 'Entraînement à l’entretien', ivIntro: 'Questions ouvertes que l’enquêteur peut poser après le dépôt. Répondez à voix haute, en français, puis comparez avec les points clés.', ivHear: 'Ce que vous entendrez probablement', ivShow: 'Afficher les points clés', ivOk: 'J’ai su répondre', ivAgain: 'À retravailler', ivDone: 'Série terminée', ivScore: (a, b) => `${a} sur ${b} réponses maîtrisées`, ivTip: 'Conseil', ivReady: (a, b) => `${a}/${b} prêtes`, ivUpdated: (d) => `Personnes en fonction et votations vérifiées le ${d}.`, ivStart: 'Commencer l’entraînement à l’entretien', offlineNote: 'Fonctionne hors ligne une fois chargée. Ajoutez-la à l’écran d’accueil depuis le menu Partager du navigateur.',
       verified: (d) => `Réponses vérifiées auprès de sources officielles le ${d}.`
     }
@@ -135,11 +137,13 @@
 
   function render(keep) {
     const [r, arg] = route();
-    const tab = r === 'exam' ? 'exam' : r === 'checklist' ? 'checklist' : r === 'info' ? 'info' : 'home';
+    const tab = r === 'exam' ? 'exam' : r === 'checklist' ? 'checklist' : r === 'info' ? 'info' : (r === 'learn' || r === 'check') ? 'learn' : 'home';
     document.querySelectorAll('.tabbar a').forEach(a => { if (a.dataset.tab === tab) a.setAttribute('aria-current', 'page'); else a.removeAttribute('aria-current'); });
     const key = location.hash;
     if (session && session.key !== key) { clearInterval(timerInt); session = null; }
     if (r === 'theme' && arg) return renderPractice(arg, key);
+    if (r === 'learn') return renderLearn(arg, route()[2], keep);
+    if (r === 'check' && arg) return renderPractice('__check:' + arg, key);
     if (r === 'review') return renderPractice('__review', key);
     if (r === 'exam') return session && session.key === key && session.mode === 'exam' ? renderQuestion() : renderExamIntro();
     if (r === 'checklist') return renderChecklist();
@@ -199,11 +203,101 @@
       <p class="small muted">${t('verified', QUIZ.verified)}</p>`;
   }
 
+  /* ---------- learn ---------- */
+  const cardForQ = {};
+  // link each question to a lesson card, preferring a card from the matching theme
+  LEARN.cards.forEach(c => c.q.forEach(id => {
+    const q = byId[id], cur = cardForQ[id];
+    if (!cur || (q && cur.theme !== q.theme && c.theme === q.theme)) cardForQ[id] = c;
+  }));
+  const lessonCards = (th) => LEARN.cards.filter(c => c.theme === th);
+  function lessonQuestions(th) { const ids = [...new Set(lessonCards(th).flatMap(c => c.q))]; return ids.map(id => byId[id]).filter(Boolean); }
+  let lessonPos = {};
+  function renderLearn(th, cardId, keep) {
+    if (!th) return renderLearnIndex();
+    if (th === 'timeline') return renderTimeline();
+    const cards = lessonCards(th), theme = LEARN.themes.find(x => x.id === th);
+    if (!cards.length || !theme) { location.hash = '#/learn'; return; }
+    if (cardId === 'done') return renderLessonDone(theme);
+    let i = cardId ? Math.max(0, cards.findIndex(c => c.id === cardId)) : (lessonPos[th] || 0);
+    lessonPos[th] = i;
+    const c = cards[i];
+    store.learn[c.id] = 1; save();
+    const dots = cards.map((x, k) => `<span class="dot ${k === i ? 'on' : store.learn[x.id] ? 'seen' : ''}"></span>`).join('');
+    view.innerHTML = `
+      <div class="qtop"><a class="crumb" href="#/learn" style="text-decoration:none">← ${esc(L(theme.title))}</a><span class="small muted">${t('cardOf', i + 1, cards.length)}</span></div>
+      <div class="dots" aria-hidden="true">${dots}</div>
+      <article class="qcard lesson">
+        ${c.img ? `<figure class="qimg" id="qimg" style="margin:0"></figure>` : ''}
+        <div class="qbody">
+          <h1 class="lesson-title">${esc(L(c.title))}</h1>
+          <p class="lesson-text">${esc(L(c.text))}</p>
+          ${c.facts.length ? `<div class="remember"><div class="remember-head">${t('remember')}</div><ul class="remember-list">${c.facts.map(f => `<li>${esc(L(f))}</li>`).join('')}</ul></div>` : ''}
+          ${c.fun ? `<div class="fun"><div class="fun-head">💡 ${t('didYouKnow')}</div>${esc(L(c.fun))}</div>` : ''}
+          <div class="btn-row">
+            <button class="btn secondary" id="prev" ${i === 0 ? 'disabled' : ''}>${t('prevCard')}</button>
+            <button class="btn ${i === cards.length - 1 ? 'red' : ''}" id="next">${i === cards.length - 1 ? t('finishLesson') : t('nextCard')}</button>
+          </div>
+        </div>
+      </article>`;
+    if (c.img) loadImg(c.img, document.getElementById('qimg'));
+    const go = (j) => { location.hash = `#/learn/${th}/${j < cards.length ? cards[j].id : 'done'}`; window.scrollTo(0, 0); };
+    document.getElementById('prev').addEventListener('click', () => go(i - 1));
+    document.getElementById('next').addEventListener('click', () => go(i + 1));
+    if (!keep) window.scrollTo(0, 0);
+  }
+  function renderLessonDone(theme) {
+    const n = Math.min(10, lessonQuestions(theme.id).length);
+    const idx = LEARN.themes.indexOf(theme), nxt = LEARN.themes[idx + 1];
+    view.innerHTML = `
+      <section class="panel lake" style="text-align:center">
+        <div style="font-size:2.6rem" aria-hidden="true">${theme.glyph}</div>
+        <h1>${t('lessonDone')}</h1>
+        <p>${t('lessonDoneText')}</p>
+        <div class="btn-row"><a class="btn red" href="#/check/${theme.id}">${t('testYourself', n)}</a></div>
+        <div class="btn-row">
+          ${nxt ? `<a class="btn secondary" href="#/learn/${nxt.id}/${lessonCards(nxt.id)[0].id}">${t('nextLesson')}: ${esc(L(nxt.title))}</a>` : ''}
+          <a class="btn secondary" href="#/learn">${t('allLessons')}</a>
+        </div>
+      </section>`;
+    window.scrollTo(0, 0);
+  }
+  function renderLearnIndex() {
+    const tiles = LEARN.themes.map(th => {
+      const cs = lessonCards(th.id), read = cs.filter(c => store.learn[c.id]).length;
+      return `<li><a class="tile" href="#/learn/${th.id}/${cs[0].id}">
+        <span class="glyph" aria-hidden="true">${th.glyph}</span>
+        <span class="tile-body"><h3>${esc(L(th.title))}</h3><span class="small muted">${esc(L(th.intro))}</span>
+        <span class="meter" aria-hidden="true"><span style="width:${Math.round(100 * read / cs.length)}%"></span></span>
+        <span class="count">${t('cardsRead', read, cs.length)}</span></span></a></li>`;
+    }).join('');
+    view.innerHTML = `
+      <h1>${t('learnTitle')}</h1>
+      <p class="muted">${t('learnIntro')}</p>
+      <a class="timeline-teaser" href="#/learn/timeline"><span class="tt-years">1291 · 1536 · 1602 · 1815 · 1848</span><span class="tt-label">${t('timelineTitle')} →</span></a>
+      <ul class="tiles">${tiles}</ul>`;
+    window.scrollTo(0, 0);
+  }
+  function renderTimeline() {
+    const items = LEARN.timeline.map(e => {
+      const c = LEARN.cards.find(x => x.id === e.card);
+      const y = lang === 'fr' && e.fr_y ? e.fr_y : e.y;
+      return `<li><a href="#/learn/${c.theme}/${c.id}"><span class="tl-year">${esc(y)}</span><span class="tl-text">${esc(L(e.t))}</span></a></li>`;
+    }).join('');
+    view.innerHTML = `
+      <div class="qtop"><a class="crumb" href="#/learn" style="text-decoration:none">← ${t('allLessons')}</a></div>
+      <h1>${t('timelineTitle')}</h1>
+      <p class="muted">${t('timelineIntro')}</p>
+      <ol class="tl">${items}</ol>`;
+    window.scrollTo(0, 0);
+  }
+
   /* ---------- practice ---------- */
   function renderPractice(themeId, key) {
     if (!session || session.key !== key) {
       let pool;
       if (themeId === '__review') pool = mistakes();
+      else if (themeId.startsWith('__check:')) pool = lessonQuestions(themeId.slice(8));
       else pool = qsOfTheme(themeId);
       if (!pool.length) { location.hash = '#/'; return; }
       // unmastered first, then the rest; cap at 10 per session
@@ -235,7 +329,7 @@
     const multi = q.answer.length > 1 || q.multi;
     const exam = s.mode === 'exam';
     const showFb = item.checked && !exam;
-    const crumb = exam ? t('examTitle') : s.themeId === '__review' ? t('reviewMistakes', s.list.length) : L(th.title);
+    const crumb = exam ? t('examTitle') : s.themeId === '__review' ? t('reviewMistakes', s.list.length) : s.themeId && s.themeId.startsWith('__check:') ? t('lessonCheck') + ' · ' + L((LEARN.themes.find(x => x.id === s.themeId.slice(8)) || {}).title) : L(th.title);
     const opts = item.order.map((k, pos) => {
       let cls = multi ? 'multi' : 'single';
       if (showFb) {
@@ -248,10 +342,15 @@
     let fb = '';
     if (showFb) {
       const ok = sameSet(item.sel, q.answer);
+      const card = cardForQ[q.id];
       fb = `<div class="feedback ${ok ? 'ok' : 'ko'}" role="status"><strong>${ok ? t('correct') : t('wrong')}</strong>
-        ${ok ? '' : `<div>${t('correctAnswerIs')} ${q.answer.map(k => esc(L(q.options[k]))).join(' · ')}</div>`}
-        <div>${esc(L(q.explain))}</div>
-        ${q.source ? `<div class="source">${t('source')}: <a href="${esc(q.source)}" target="_blank" rel="noopener">${esc(new URL(q.source).hostname.replace('www.', ''))}</a></div>` : ''}</div>`;
+        ${ok ? '' : `<div>${t('youChose')} ${item.sel.map(k => esc(L(q.options[k]))).join(' · ')}</div><div><b>${t('correctAnswerIs')} ${q.answer.map(k => esc(L(q.options[k]))).join(' · ')}</b></div>`}
+        <div style="margin-top:6px">${esc(L(q.explain))}</div>
+        ${q.source ? `<div class="source">${t('source')}: <a href="${esc(q.source)}" target="_blank" rel="noopener">${esc(new URL(q.source).hostname.replace('www.', ''))}</a></div>` : ''}</div>
+        ${card ? `<aside class="context"><div class="context-head">📖 ${t('learnMore')}: ${esc(L(card.title))}</div>
+          <p>${esc(L(card.text))}</p>
+          ${card.facts.length ? `<ul class="remember-list">${card.facts.map(f => `<li>${esc(L(f))}</li>`).join('')}</ul>` : ''}
+          <a class="linkbtn" href="#/learn/${card.theme}/${card.id}">${t('openLesson')}</a></aside>` : ''}`;
     }
     const last = s.i === s.list.length - 1;
     const actionBtn = exam
@@ -333,7 +432,7 @@
         <div style="font-weight:700">${good ? '✓' : '✗'} ${esc(L(q.q))}</div>
         ${good ? '' : `<div class="small">${t('yourAnswer')} ${it.sel.length ? it.sel.map(k => esc(L(q.options[k]))).join(' · ') : t('none')}</div>
         <div class="small">${t('correctAnswerIs')} <b>${q.answer.map(k => esc(L(q.options[k]))).join(' · ')}</b></div>
-        <div class="small muted">${esc(L(q.explain))}</div>`}</div>`;
+        <div class="small muted">${esc(L(q.explain))}</div>${cardForQ[q.id] ? `<a class="linkbtn small" href="#/learn/${cardForQ[q.id].theme}/${cardForQ[q.id].id}">📖 ${esc(L(cardForQ[q.id].title))}</a>` : ''}`}</div>`;
     }).join('');
     view.innerHTML = `
       <h1>${exam ? t('examTitle') : t('sessionDone')}</h1>
@@ -540,7 +639,7 @@
     document.getElementById('lock').addEventListener('click', () => { if (window.natgeLock) window.natgeLock(); });
     document.getElementById('reset').addEventListener('click', () => {
       if (!confirm(t('resetConfirm'))) return;
-      store.progress = {}; store.checks = {}; store.exams = []; store.stamped = {}; store.interview = {}; store.settings.origin = ''; store.settings.target = '2027-09'; save(); toast(t('resetDone'));
+      store.progress = {}; store.checks = {}; store.exams = []; store.stamped = {}; store.interview = {}; store.learn = {}; store.settings.origin = ''; store.settings.target = '2027-09'; save(); toast(t('resetDone'));
     });
   }
 

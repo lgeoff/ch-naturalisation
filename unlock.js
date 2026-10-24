@@ -29,7 +29,7 @@
     return JSON.parse(new TextDecoder().decode(buf));
   }
   function start(data) {
-    window.QUIZ = data.QUIZ; window.NEWS = data.NEWS; window.CHECKLIST = data.CHECKLIST; window.INTERVIEW = data.INTERVIEW;
+    window.QUIZ = data.QUIZ; window.NEWS = data.NEWS; window.CHECKLIST = data.CHECKLIST; window.INTERVIEW = data.INTERVIEW; window.LEARN = data.LEARN;
     document.body.classList.remove('locked');
     const s = document.createElement('script'); s.src = 'app.js'; document.body.appendChild(s);
   }
